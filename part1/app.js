@@ -11,63 +11,79 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Database connection (assuming dogwalks.sql has already been executed)
 let db;
 
 (async () => {
   try {
-    // Connect to MySQL without specifying a database
-    const connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '' // Set your MySQL root password
-    });
-
-    // Create the database if it doesn't exist
-    await connection.query('CREATE DATABASE IF NOT EXISTS testdb');
-    await connection.end();
-
-    // Now connect to the created database
     db = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
       password: '',
-      database: 'testdb'
+      database: 'DogWalkService'
     });
-
-    // Create a table if it doesn't exist
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS books (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255),
-        author VARCHAR(255)
-      )
-    `);
-
-    // Insert data if table is empty
-    const [rows] = await db.execute('SELECT COUNT(*) AS count FROM books');
-    if (rows[0].count === 0) {
-      await db.execute(`
-        INSERT INTO books (title, author) VALUES
-        ('1984', 'George Orwell'),
-        ('To Kill a Mockingbird', 'Harper Lee'),
-        ('Brave New World', 'Aldous Huxley')
-      `);
-    }
+    console.log('Connected to DogWalkService database');
   } catch (err) {
-    console.error('Error setting up database. Ensure Mysql is running: service mysql start', err);
+    console.error('Error connecting to database:', err);
+    process.exit(1);
   }
 })();
 
-// Route to return books as JSON
-app.get('/', async (req, res) => {
+// 1. Route to get all dogs with owner usernames
+app.get('/api/dogs', async (req, res) => {
   try {
-    const [books] = await db.execute('SELECT * FROM books');
-    res.json(books);
+    const [dogs] = await db.execute(`
+      SELECT d.name AS dog_name, d.size, u.username AS owner_username
+      FROM Dogs d
+      JOIN Users u ON d.owner_id = u.user_id
+    `);
+    res.json(dogs);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch books' });
+    console.error('Error in /api/dogs:', err);
+    res.status(500).json({ error: 'Failed to fetch dogs' });
   }
 });
 
+// 2. Route to get all open walk requests
+app.get('/api/walkrequests/open', async (req, res) => {
+  try {
+    const [requests] = await db.execute(`
+      SELECT wr.request_id, d.name AS dog_name, wr.requested_time,
+             wr.duration_minutes, wr.location, u.username AS owner_username
+      FROM WalkRequests wr
+      JOIN Dogs d ON wr.dog_id = d.dog_id
+      JOIN Users u ON d.owner_id = u.user_id
+      WHERE wr.status = 'open'
+    `);
+    res.json(requests);
+  } catch (err) {
+    console.error('Error in /api/walkrequests/open:', err);
+    res.status(500).json({ error: 'Failed to fetch open walk requests' });
+  }
+});
+
+// 3. Route to get walker summary with ratings
+app.get('/api/walkers/summary', async (req, res) => {
+  try {
+    const [summary] = await db.execute(`
+      SELECT
+        u.username AS walker_username,
+        COUNT(wr.rating_id) AS total_ratings,
+        AVG(wr.rating) AS average_rating,
+        COUNT(DISTINCT wr.request_id) AS completed_walks
+      FROM Users u
+      LEFT JOIN WalkRatings wr ON u.user_id = wr.walker_id
+      WHERE u.role = 'walker'
+      GROUP BY u.user_id, u.username
+    `);
+    res.json(summary);
+  } catch (err) {
+    console.error('Error in /api/walkers/summary:', err);
+    res.status(500).json({ error: 'Failed to fetch walker summary' });
+  }
+});
+
+// Static files (if needed)
 app.use(express.static(path.join(__dirname, 'public')));
 
 module.exports = app;
