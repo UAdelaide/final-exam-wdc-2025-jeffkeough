@@ -23,6 +23,13 @@ let db;
       database: 'DogWalkService'
     });
     console.log('Connected to DogWalkService database');
+
+    // Start the server after database connection is established
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+
   } catch (err) {
     console.error('Error connecting to database:', err);
     process.exit(1);
