@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DogWalk Service - Overwhelming Experience</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #ff00ff;
+            color: #00ff00;
+            background-image: url('https://www.transparenttextures.com/patterns/45-degree-fabric-light.png');
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            animation: spin 5s linear infinite;
+        }
+        .dog-card {
+            border: 10px dashed red;
+            padding: 5px;
+            margin: 5px;
+            width: 80%;
+            background-color: yellow;
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.5);
+            transform: rotate(5deg);
+        }
+        .dog-image {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            filter: hue-rotate(90deg) contrast(200%);
+        }
+        .info-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,255,0.7);
+            padding: 20px;
+            border-radius: 0;
+            z-index: 100;
+        }
+        .blinking {
+            animation: blink 0.5s step-end infinite alternate;
+        }
+        .marquee {
+            white-space: nowrap;
+            overflow: hidden;
+            box-sizing: border-box;
+            animation: marquee 10s linear infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        button {
+            background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+            border: none;
+            padding: 15px 30px;
+            font-size: 24px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .hidden-text {
+            color: yellow;
+            font-size: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- Flashing, moving header -->
+            <h1 class="blinking marquee">!!!DOG OF THE DAY!!! SPECIAL OFFER LIMITED TIME ONLY DON'T MISS OUT !!!DOG OF THE DAY!!!</h1>
+
+            <!-- Random dog image with poor contrast -->
+            <div class="dog-card">
+                <img :src="dogImage" alt="image" class="dog-image">
+                <h2 style="color: lightblue; text-align: right;">{{ dogName }}</h2>
+                <p style="font-size: 8px; line-height: 1.2;">Breed: {{ dogBreed }} | Age: {{ dogAge }} | Weight: {{ dogWeight }} | Favorite Food: {{ dogFood }} | Last Walk: {{ dogLastWalk }} | Next Walk: {{ dogNextWalk }} | Vaccination Status: {{ dogVaccination }} | Temperament: {{ dogTemperament }} | Owner: {{ dogOwner }} | Favorite Toy: {{ dogToy }} | Microchip: {{ dogMicrochip }} | Grooming Needs: {{ dogGrooming }}</p>
+                <div class="hidden-text">Cheap dog walking services call now 555-123-4567 limited time offer</div>
+            </div>
+
+            <!-- Overlapping info panel -->
+            <div class="info-panel">
+                <h3>Today's Special!</h3>
+                <p>Book 10 walks get 1 free*</p>
+                <p><small>*Terms and conditions apply. Offer valid only on Tuesdays during full moon when Mercury is in retrograde.</small></p>
+            </div>
+
+            <!-- Tiny close button -->
+            <button @click="getRandomDog" style="position: fixed; bottom: 5px; right: 5px; width: 30px; height: 30px; padding: 0;">X</button>
+
+            <!-- Confusing navigation -->
+            <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: black; color: white; text-align: center;">
+                <span @click="currentTab = 'home'" style="margin: 0 10px;">Home</span> |
+                <span @click="currentTab = 'services'" style="margin: 0 10px;">Services</span> |
+                <span @click="currentTab = 'about'" style="margin: 0 10px;">About</span> |
+                <span @click="currentTab = 'contact'" style="margin: 0 10px;">Contact</span> |
+                <span @click="currentTab = 'faq'" style="margin: 0 10px;">FAQ</span> |
+                <span @click="currentTab = 'blog'" style="margin: 0 10px;">Blog</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const dogImage = ref('');
+                const dogName = ref('Sparky');
+                const dogBreed = ref('Mixed Breed');
+                const dogAge = ref('3 years');
+                const dogWeight = ref('15 kg');
+                const dogFood = ref('Kibble');
+                const dogLastWalk = ref('Today 8:00 AM');
+                const dogNextWalk = ref('Tomorrow 8:00 AM');
+                const dogVaccination = ref('Up to date');
+                const dogTemperament = ref('Friendly but sometimes anxious around loud noises');
+                const dogOwner = ref('Sarah Johnson');
+                const dogToy = ref('Blue rubber bone');
+                const dogMicrochip = ref('1234567890');
+                const dogGrooming = ref('Weekly brushing recommended');
+                const currentTab = ref('home');
+
+                const getRandomDog = async () => {
+                    try {
+                        const response = await fetch('https://dog.ceo/api/breeds/image/random');
+                        const data = await response.json();
+                        dogImage.value = data.message;
+                    } catch (error) {
+                        console.error('Error fetching dog image:', error);
+                    }
+                };
+
+                // Initial load
+                getRandomDog();
+
+                return {
+                    dogImage,
+                    dogName,
+                    dogBreed,
+                    dogAge,
+                    dogWeight,
+                    dogFood,
+                    dogLastWalk,
+                    dogNextWalk,
+                    dogVaccination,
+                    dogTemperament,
+                    dogOwner,
+                    dogToy,
+                    dogMicrochip,
+                    dogGrooming,
+                    currentTab,
+                    getRandomDog
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
