@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Database connection (assuming dogwalks.sql has already been executed)
+// Database connection
 let db;
 
 (async () => {
@@ -90,7 +90,6 @@ app.get('/api/walkers/summary', async (req, res) => {
   }
 });
 
-// Static files (if needed)
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
