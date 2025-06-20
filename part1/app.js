@@ -93,4 +93,8 @@ app.get('/api/walkers/summary', async (req, res) => {
 // Static files (if needed)
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/', (req, res) => {
+  res.send('DogWalkService API is running. Try /api/dogs, /api/walkrequests/open, or /api/walkers/summary');
+});
+
 module.exports = app;
